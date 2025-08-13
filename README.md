@@ -101,7 +101,7 @@ docker exec -it taskflow-api rm database/init_users.php
 
 ---
 
-## Testing API Lengkap dengan Curl (Windows CMD)
+## Testing API dengan Curl (Windows CMD)
 
 ### 1. Autentikasi
 
