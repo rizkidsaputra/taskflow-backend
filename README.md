@@ -1,2 +1,143 @@
-# taskflow-backend
-Final Project CCI
+<h1 align="center">📌 TaskFlow Backend API</h1>
+<p align="center">
+  ⚙️ Backend untuk aplikasi manajemen tugas kolaboratif <strong>TaskFlow</strong> menggunakan <strong>PHP Native</strong>.<br>
+  Dirancang untuk manajemen proyek, kolaborasi tim, dan API berbasis JSON yang siap digunakan.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Language-PHP-blue?style=flat-square" />
+  <img src="https://img.shields.io/badge/Database-MySQL-orange?style=flat-square" />
+  <img src="https://img.shields.io/badge/Docker-Ready-green?style=flat-square" />
+  <img src="https://img.shields.io/badge/Status-Stable-brightgreen?style=flat-square" />
+</p>
+
+---
+
+## 🚀 Fitur Utama
+- 🔑 Autentikasi member (4 user awal)
+- 📂 CRUD Proyek & Tugas
+- 👥 Sistem kolaborasi tim
+- 🌐 Akses publik untuk guest
+- 📡 API berbasis JSON
+- 🐳 Containerized dengan Docker
+
+---
+
+## 🗄 Struktur Database
+**Users**  
+`id`, `username`, `password_hash`, `role`, `created_at`  
+
+**Projects**  
+`id`, `name`, `description`, `created_by`, `due_date`, `is_public`, `created_at`  
+
+**Project_Members**  
+`project_id`, `user_id`, `joined_at`  
+
+**Tasks**  
+`id`, `project_id`, `title`, `description`, `status`, `assigned_to`, `is_public`, `due_date`, `created_at`, `updated_at`
+
+---
+
+## 🌐 API Endpoints
+### 🔐 Autentikasi
+- `POST /api/auth/login.php` – Login member
+- `POST /api/auth/logout.php` – Logout member
+
+### 📂 Proyek
+- `GET /api/projects/index.php` – List proyek
+- `POST /api/projects/index.php` – Tambah proyek
+- `GET /api/projects/index.php?id={id}` – Detail proyek
+- `PUT /api/projects/index.php` – Edit proyek
+- `DELETE /api/projects/index.php` – Hapus proyek
+- `POST /api/projects/index.php?action=invite&id={id}` – Undang anggota
+- `GET /api/projects/members.php?project_id={id}` – List anggota proyek
+
+### 📋 Tugas
+- `GET /api/tasks/index.php?project_id={id}` – List tugas proyek
+- `POST /api/tasks/index.php` – Tambah tugas
+- `GET /api/tasks/index.php?id={id}` – Detail tugas
+- `PUT /api/tasks/index.php` – Edit tugas
+- `DELETE /api/tasks/index.php` – Hapus tugas
+
+### 🌍 Akses Publik
+- `GET /api/public/projects.php` – List proyek publik
+- `GET /api/public/tasks.php?project_id={id}` – List tugas publik
+- `GET /api/public/tasks.php?id={id}` – Detail tugas publik
+
+---
+
+## 📦 Instalasi
+### Opsi 1 – Docker (PHP-FPM)
+```bash
+# Build image
+docker build -t taskflow-backend .
+
+# Jalankan MySQL
+docker run -d --name taskflow-mysql   -e MYSQL_ROOT_PASSWORD=root123   -e MYSQL_DATABASE=taskflow   -p 3306:3306 mysql:8.0
+
+# Jalankan Backend
+docker run -d --name taskflow-api   --link taskflow-mysql:mysql   -p 9000:9000 taskflow-backend
+```
+
+**Setup Database**
+```bash
+docker exec -i taskflow-mysql mysql -u root -proot123 taskflow < database/setup.sql
+```
+
+**Inisialisasi User Awal**
+```bash
+docker exec -it taskflow-api php database/init_users.php
+docker exec -it taskflow-api rm database/init_users.php
+```
+
+---
+
+### Opsi 2 – XAMPP (Manual)
+1. Install XAMPP dan aktifkan Apache & MySQL  
+2. Copy folder ke `C:\xampp\htdocs\taskflow-backend`  
+3. Import `database/setup.sql` lewat phpMyAdmin  
+4. Jalankan `database/init_users.php` sekali, lalu hapus  
+5. Test API dengan `curl` atau Postman
+
+---
+
+## 🔍 Testing API (Contoh Curl)
+**Login**
+```bash
+curl -X POST http://localhost/taskflow-backend/api/auth/login.php   -H "Content-Type: application/json"   -d '{"username":"lovind","password":"password123"}'
+```
+
+**Buat Proyek**
+```bash
+curl -X POST http://localhost/taskflow-backend/api/projects/index.php   -H "Content-Type: application/json"   -d '{"name":"Website Redesign","description":"Redesign company website","is_public":true}'
+```
+
+---
+
+## 🔒 Keamanan
+- ✅ Password hash dengan `password_hash()`
+- ✅ Prepared statements
+- ✅ Validasi input
+- ✅ Session-based auth
+- ⚠️ Hapus `database/init_users.php` setelah setup
+- ⚠️ Ganti password default database
+
+---
+
+## 📂 Struktur Folder
+```
+taskflow-backend/
+├── api/
+│   ├── auth/
+│   ├── projects/
+│   ├── tasks/
+│   └── public/
+├── config/
+├── utils/
+├── database/
+├── .htaccess
+├── Dockerfile
+└── README.md
+```
+
+<p align="center">Backend TaskFlow siap digunakan! 🚀</p>
