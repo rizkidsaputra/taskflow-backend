@@ -101,16 +101,141 @@ docker exec -it taskflow-api rm database/init_users.php
 
 ---
 
-## 🔍 Testing API (Contoh Curl)
-**Login**
-```bash
-curl -X POST http://localhost/taskflow-backend/api/auth/login.php   -H "Content-Type: application/json"   -d '{"username":"lovind","password":"password123"}'
+## Testing API Lengkap dengan Curl (Windows CMD)
+
+### 1. Autentikasi
+
+**Login dan Simpan Session:**
+```cmd
+curl -X POST http://localhost/taskflow-backend/api/auth/login.php ^
+  -H "Content-Type: application/json" ^
+  -d "{\"username\":\"lovind\",\"password\":\"password123\"}" ^
+  -c cookies.txt
 ```
 
-**Buat Proyek**
-```bash
-curl -X POST http://localhost/taskflow-backend/api/projects/index.php   -H "Content-Type: application/json"   -d '{"name":"Website Redesign","description":"Redesign company website","is_public":true}'
+**Logout:**
+```cmd
+curl -X POST http://localhost/taskflow-backend/api/auth/logout.php ^
+  -b cookies.txt
 ```
+
+### 2. Manajemen Proyek
+
+**List Proyek Member:**
+```cmd
+curl -X GET http://localhost/taskflow-backend/api/projects/index.php ^
+  -b cookies.txt
+```
+
+**Tambah Proyek:**
+```cmd
+curl -X POST http://localhost/taskflow-backend/api/projects/index.php ^
+  -H "Content-Type: application/json" ^
+  -b cookies.txt ^
+  -d "{\"name\":\"Website Redesign\",\"description\":\"Redesign company website\",\"is_public\":true,\"due_date\":\"2024-12-31\"}"
+```
+
+**Detail Proyek:**
+```cmd
+curl -X GET "http://localhost/taskflow-backend/api/projects/index.php?id=1" ^
+  -b cookies.txt
+```
+
+**Edit Proyek:**
+```cmd
+curl -X PUT http://localhost/taskflow-backend/api/projects/index.php ^
+  -H "Content-Type: application/json" ^
+  -b cookies.txt ^
+  -d "{\"id\":1,\"name\":\"Website Redesign - Updated\",\"description\":\"Complete website redesign with new features\",\"is_public\":false,\"due_date\":\"2025-01-15\"}"
+```
+
+**Hapus Proyek:**
+```cmd
+curl -X DELETE http://localhost/taskflow-backend/api/projects/index.php ^
+  -H "Content-Type: application/json" ^
+  -b cookies.txt ^
+  -d "{\"id\":1}"
+```
+
+### 3. Manajemen Anggota Proyek
+
+**Undang Anggota ke Proyek:**
+```cmd
+curl -X POST "http://localhost/taskflow-backend/api/projects/index.php?action=invite&id=1" ^
+  -H "Content-Type: application/json" ^
+  -b cookies.txt ^
+  -d "{\"username\":\"danish\"}"
+```
+
+**List Anggota Proyek:**
+```cmd
+curl -X GET "http://localhost/taskflow-backend/api/projects/members.php?project_id=1" ^
+  -b cookies.txt
+```
+
+**Hapus Anggota dari Proyek:**
+```cmd
+curl -X DELETE http://localhost/taskflow-backend/api/projects/members.php ^
+  -H "Content-Type: application/json" ^
+  -b cookies.txt ^
+  -d "{\"project_id\":1,\"user_id\":2}"
+```
+
+### 4. Manajemen Tugas
+
+**List Tugas Proyek:**
+```cmd
+curl -X GET "http://localhost/taskflow-backend/api/tasks/index.php?project_id=1" ^
+  -b cookies.txt
+```
+
+**Tambah Tugas:**
+```cmd
+curl -X POST http://localhost/taskflow-backend/api/tasks/index.php ^
+  -H "Content-Type: application/json" ^
+  -b cookies.txt ^
+  -d "{\"project_id\":1,\"title\":\"Design Homepage\",\"description\":\"Create new homepage design mockup\",\"status\":\"todo\",\"priority\":\"high\",\"assigned_to\":2,\"is_public\":true,\"deadline\":\"2024-12-31\"}"
+```
+
+**Detail Tugas:**
+```cmd
+curl -X GET "http://localhost/taskflow-backend/api/tasks/index.php?id=1" ^
+  -b cookies.txt
+```
+
+**Edit Tugas:**
+```cmd
+curl -X PUT http://localhost/taskflow-backend/api/tasks/index.php ^
+  -H "Content-Type: application/json" ^
+  -b cookies.txt ^
+  -d "{\"id\":1,\"title\":\"Design Homepage - Revised\",\"description\":\"Create homepage design with client feedback\",\"status\":\"in_progress\",\"priority\":\"medium\",\"assigned_to\":3,\"is_public\":true,\"deadline\":\"2024-12-25\"}"
+```
+
+**Hapus Tugas:**
+```cmd
+curl -X DELETE http://localhost/taskflow-backend/api/tasks/index.php ^
+  -H "Content-Type: application/json" ^
+  -b cookies.txt ^
+  -d "{\"id\":1}"
+```
+
+### 5. Akses Publik (Guest - Tanpa Login)
+
+**List Proyek Publik:**
+```cmd
+curl -X GET http://localhost/taskflow-backend/api/public/projects.php
+```
+
+**List Tugas Publik dari Proyek:**
+```cmd
+curl -X GET "http://localhost/taskflow-backend/api/public/tasks.php?project_id=1"
+```
+
+**Detail Tugas Publik:**
+```cmd
+curl -X GET "http://localhost/taskflow-backend/api/public/tasks.php?id=1"
+```
+
 
 ---
 
