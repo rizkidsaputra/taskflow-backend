@@ -1,5 +1,9 @@
 FROM php:8.2-fpm
 
+RUN apt-get update && apt-get install -y \
+    default-mysql-client \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install ekstensi PDO MySQL
 RUN docker-php-ext-install pdo pdo_mysql
 
