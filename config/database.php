@@ -3,10 +3,10 @@
  * Konfigurasi koneksi database menggunakan PDO
  */
 class Database {
-    private $host = "localhost";
+    private $host = "mysql"; // Docker container hostname
     private $db_name = "taskflow";
     private $username = "root";
-    private $password = "";
+    private $password = "root123"; // MySQL container password
     public $conn;
     
     /**
