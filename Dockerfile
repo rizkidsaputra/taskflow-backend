@@ -1,25 +1,12 @@
-# Multi-stage build: build React app, then serve with Nginx
-FROM node:18-alpine AS build
-WORKDIR /app
+FROM php:8.2-apache
 
-# Install deps
-COPY package*.json ./
-RUN npm ci || npm install
+# Enable apache modules commonly needed
+RUN a2enmod headers rewrite
 
-# Copy source
-COPY . .
+# Install PHP extensions
+RUN docker-php-ext-install pdo pdo_mysql
 
-# Build with optional API base
-ARG REACT_APP_API_BASE
-ENV REACT_APP_API_BASE=$REACT_APP_API_BASE
-RUN npm run build
-
-# ---- Production image
-FROM nginx:alpine
-# Copy build output
-COPY --from=build /app/build /usr/share/nginx/html
-# Nginx config for SPA routing
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+WORKDIR /var/www/html
+COPY . /var/www/html
 
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
