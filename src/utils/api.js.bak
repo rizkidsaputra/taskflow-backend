@@ -1,0 +1,133 @@
+// === src/utils/api.js ===
+import { API_ENDPOINTS } from "./config";
+
+/**
+ * Request helper
+ * - otomatis kirim Bearer token kalau ada
+ * - parsing JSON aman
+ * - error message dari backend dipakai
+ */
+async function request(method, url, body, extraHeaders = {}, withAuth = true) {
+  const headers = { "Content-Type": "application/json", ...extraHeaders };
+
+  if (withAuth) {
+    const token = localStorage.getItem("token");
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(url, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+    credentials: "include",
+  });
+
+  let data = null;
+  try {
+    data = await res.json();
+  } catch (_) {
+    // biarkan null kalau bukan JSON
+  }
+
+  if (!res.ok) {
+    const msg =
+      data?.message ||
+      data?.error ||
+      `${res.status} ${res.statusText}` ||
+      "Request failed";
+    throw new Error(msg);
+  }
+
+  return data || {};
+}
+
+// ==== Wrappers ====
+export const apiGet = (url, withAuth = true) =>
+  request("GET", url, undefined, {}, withAuth);
+export const apiPost = (url, body, withAuth = true) =>
+  request("POST", url, body, {}, withAuth);
+export const apiPut = (url, body, withAuth = true) =>
+  request("PUT", url, body, {}, withAuth);
+export const apiDelete = (url, withAuth = true) =>
+  request("DELETE", url, undefined, {}, withAuth);
+
+// ==== AUTH ====
+export async function login({ email, password }) {
+  const data = await apiPost(
+    API_ENDPOINTS.auth.login,
+    { email, password },
+    false
+  );
+  // Backend kamu kirim { success, message, data: { token, user } } ATAU { token, user }?
+  const token = data?.data?.token || data?.token;
+  const user = data?.data?.user || data?.user;
+  if (token) localStorage.setItem("token", token);
+  if (user) localStorage.setItem("user", JSON.stringify(user));
+  return data;
+}
+
+export function getCurrentUser() {
+  try {
+    return JSON.parse(localStorage.getItem("user"));
+  } catch {
+    return null;
+  }
+}
+
+export function logout() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+}
+
+// ==== USERS ====
+// NOTE: endpoint users biasanya butuh token → withAuth: true
+export async function fetchUsers() {
+  const data = await apiGet(API_ENDPOINTS.users.list, true);
+  // BE kamu: { success, message, users: [...] }
+  return data?.users || data?.data?.users || [];
+}
+
+// ==== PROJECTS ====
+export async function fetchProjects() {
+  const data = await apiGet(API_ENDPOINTS.projects.list, true);
+  // BE kamu: { success, message, projects: [...] }
+  return data?.projects || data?.data?.projects || [];
+}
+
+export async function createProject(payload) {
+  // BE kamu menaruh POST di index.php
+  const data = await apiPost(API_ENDPOINTS.projects.list, payload, true);
+  // BE create biasanya return { project: {...} } atau { data: { project } }
+  return data?.project || data?.data?.project || data;
+}
+
+export async function updateProject(id, payload) {
+  const data = await apiPut(API_ENDPOINTS.projects.detail(id), payload, true);
+  return data?.project || data?.data?.project || data;
+}
+
+export async function deleteProject(id) {
+  return apiDelete(API_ENDPOINTS.projects.detail(id), true);
+}
+
+// ==== TASKS ====
+// Catatan: skema BE kamu punya 1 assignee per task (bukan multi)
+export async function fetchTasks(projectId) {
+  const data = await apiGet(API_ENDPOINTS.tasks.list(projectId), true);
+  return data?.tasks || data?.data?.tasks || [];
+}
+
+export async function createTask(payload) {
+  // payload: { project_id, title, description, assignee, status?, deadline? }
+  const data = await apiPost(API_ENDPOINTS.tasks.create, payload, true);
+  return data?.task || data?.data?.task || data;
+}
+
+export async function updateTask(id, payload) {
+  const data = await apiPut(API_ENDPOINTS.tasks.detail(id), payload, true);
+  return data?.task || data?.data?.task || data;
+}
+
+export async function deleteTask(id) {
+  return apiDelete(API_ENDPOINTS.tasks.detail(id), true);
+}
