@@ -67,28 +67,70 @@
 ---
 
 ## 📦 Instalasi
-### Opsi 1 – Docker (PHP-FPM)
-```bash
-# Build image
+### Opsi 1 – Docker (PHP-FPM) - CMD Windows
+## 1. Jalankan MySQL container
+```cmd
+docker run -d --name mysql-taskflow ^
+  -e MYSQL_ROOT_PASSWORD=root123 ^
+  -e MYSQL_DATABASE=taskflow ^
+  -p 3306:3306 ^
+  mysql:8.0
+```
+
+---
+
+## 2. Tunggu MySQL siap (±60 detik)
+```cmd
+timeout /t 60
+```
+
+---
+
+## 3. Import database schema
+```cmd
+docker cp database/setup.sql mysql-taskflow:/setup.sql
+docker exec mysql-taskflow mysql -uroot -proot123 taskflow -e "source /setup.sql"
+```
+
+---
+
+## 4. Verifikasi database berhasil terimport
+```cmd
+docker exec mysql-taskflow mysql -uroot -proot123 -e "SHOW TABLES;" taskflow
+```
+
+---
+
+## 5. Build image dan jalankan container PHP
+```cmd
 docker build -t taskflow-backend .
-
-# Jalankan MySQL
-docker run -d --name taskflow-mysql   -e MYSQL_ROOT_PASSWORD=root123   -e MYSQL_DATABASE=taskflow   -p 3306:3306 mysql:8.0
-
-# Jalankan Backend
-docker run -d --name taskflow-api   --link taskflow-mysql:mysql   -p 9000:9000 taskflow-backend
+docker run -d --name taskflow-api ^
+  --link mysql-taskflow:mysql ^
+  -p 8000:8000 ^
+  taskflow-backend
 ```
 
-**Setup Database**
-```bash
-docker exec -i taskflow-mysql mysql -u root -proot123 taskflow < database/setup.sql
+---
+
+## 6. Setup user awal & jalankan server
+```cmd
+docker exec -it taskflow-api bash
+
+:: Jalankan PHP built-in server
+php -S 0.0.0.0:8000 -t /var/www/html ^
+
+:: Inisialisasi 4 user awal
+php /var/www/html/database/init_users.php
+
+:: Keluar container
+exit
 ```
 
-**Inisialisasi User Awal**
-```bash
-docker exec -it taskflow-api php database/init_users.php
-docker exec -it taskflow-api rm database/init_users.php
+⚠️ **Penting:** Hapus `database/init_users.php` setelah selesai setup:
+```cmd
+docker exec -it taskflow-api rm /var/www/html/database/init_users.php
 ```
+
 
 ---
 
