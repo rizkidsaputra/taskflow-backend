@@ -43,6 +43,11 @@ Endpoints (sesuai FE):
 - **BE** → http://localhost:8080/api (PHP + Apache container)  
 - **DB** → MariaDB container (import taskflow.sql)  
 
+```bash
+git clone https://github.com/rizkidsaputra/taskflow-backend
+cd taskflow-backend
+```
+
 ### 1. Buat Docker Network
 ```bash
 docker network create taskflow-net
@@ -50,14 +55,14 @@ docker network create taskflow-net
 
 ### 2. Jalankan Database (MariaDB)
 ```bash
-docker run -d   --name taskflow-mysql   --network taskflow-net   -e MYSQL_ROOT_PASSWORD=root   -e MYSQL_DATABASE=taskflow   mariadb:10.4
+docker run -d --name taskflow-mysql --network taskflow-net -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=taskflow mariadb:10.4
 ```
 - root password: root  
 - database otomatis dibuat: taskflow
 
 ### 3. Import SQL
 ```bash
-docker cp "taskflow.sql" taskflow-mysql:/taskflow.sql
+docker cp "taskflow (5).sql" taskflow-mysql:/taskflow.sql
 docker exec -it taskflow-mysql bash -c "mysql -uroot -proot taskflow < /taskflow.sql"
 ```
 
@@ -72,8 +77,9 @@ Harus ada: users, projects, tasks, auth_tokens, project_members.
 Dari folder `taskflow-backend`:
 ```bash
 docker build -t taskflow-backend .
-docker run -d   --name taskflow-api   --network taskflow-net   -p 8080:80   taskflow-backend
+docker run -d --name taskflow-api --network taskflow-net -p 8080:80 taskflow-backend
 ```
+Sesuaikan Port dengan kebutuhan
 
 ### 5. Test
 Backend langsung:
