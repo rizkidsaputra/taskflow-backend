@@ -8,7 +8,6 @@ $user = get_user_by_token($pdo); // nullable — guests can list public
 
 if ($method === 'GET') {
   if ($user) {
-    // Owner or member projects
     $sql = "SELECT DISTINCT p.id, p.title, p.description, p.owner_id, u.username AS owner_name,
                    p.is_private, p.created_at
             FROM projects p
@@ -63,8 +62,9 @@ if ($method === 'POST') {
   $q->execute([$id]);
   $project = $q->fetch(PDO::FETCH_ASSOC);
   $project['tasks'] = [];
-  json_ok(['project' => $project], 201);
+  json_ok(['projects' => [$project]], 201);
 }
+
 
 json_error('Method not allowed', 405);
 ?>
