@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../../config/cors.php';
+require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../lib/auth.php';
 require_once __DIR__ . '/../../lib/response.php';
 
@@ -26,9 +27,23 @@ if ($method === 'PUT' || $method === 'PATCH') {
 
     $title = isset($d['title']) ? trim($d['title']) : null;
     $description = isset($d['description']) ? trim($d['description']) : null;
-    $status = isset($d['status']) ? $d['status'] : null;
+
+    // Validasi status agar sesuai ENUM
+    $status = null;
+    if (isset($d['status'])) {
+        $allowed = ['todo','in_progress','done'];
+        if (!in_array($d['status'], $allowed, true)) {
+            json_response(['success'=>false,'message'=>'Invalid status value'], 400);
+        }
+        $status = $d['status'];
+    }
+
     $deadline = array_key_exists('deadline', $d) ? $d['deadline'] : null;
-    $assignee = array_key_exists('assignee', $d) ? ($d['assignee'] !== '' ? (int)$d['assignee'] : null) : null;
+
+    // Perbaikan assignee agar NULL beneran tersimpan
+    $assignee = array_key_exists('assignee', $d)
+        ? ($d['assignee'] === null || $d['assignee'] === '' ? null : (int)$d['assignee'])
+        : null;
 
     $sets = [];
     $vals = [];
@@ -37,14 +52,18 @@ if ($method === 'PUT' || $method === 'PATCH') {
     if ($description !== null) { $sets[] = 'description = ?'; $vals[] = $description; }
     if ($status !== null) { $sets[] = 'status = ?'; $vals[] = $status; }
     if ($deadline !== null) { $sets[] = 'deadline = ?'; $vals[] = $deadline; }
-    if ($assignee !== null) { $sets[] = 'assignee = ?'; $vals[] = $assignee; }
+    if (array_key_exists('assignee', $d)) { $sets[] = 'assignee = ?'; $vals[] = $assignee; }
 
     if (!$sets) json_response(['success'=>false,'message'=>'No fields to update'], 400);
 
     $vals[] = $id;
     $sql = 'UPDATE tasks SET ' . implode(', ', $sets) . ' WHERE id = ?';
     $stmt = $pdo->prepare($sql);
-    $stmt->execute($vals);
+
+    if (!$stmt->execute($vals)) {
+        $error = $stmt->errorInfo();
+        json_response(['success'=>false,'message'=>'DB error','error'=>$error], 500);
+    }
 
     // Ambil task terbaru biar FE langsung bisa refresh data
     $stmt = $pdo->prepare("SELECT t.id, t.project_id, t.title, t.description, t.status, t.deadline, t.created_at,
